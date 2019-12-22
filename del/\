@@ -1,0 +1,533 @@
+#include<string.h>
+#include<malloc.h>
+#include<limits.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<sys/io.h>
+#include<math.h>
+//#include<process.h>
+#define TRUE 1
+#define FALSE 0
+#define OK 1
+#define ERROR -1
+#define INFEASIBLE -1
+typedef struct GLNode
+{
+   char name[100];   /*教师或学生的名字*/
+   char prof[100];   /*教师结点表示职称，学生结点表示班级*/
+   int type;         /*结点类型：0-教师，1-研究生，2-本科生*/
+   struct {struct GLNode * hp,* tp;}ptr;
+                     /*hp指向同级的下一结点，tp指向下级的首结点*/
+}GList;
+int main()
+{
+GList * GListCreate(char * str)  /*建立广义表*/
+{
+   GList * head,* p,* q,* m,* a; /*简要介绍：head指向头结点，不变；p指向导师结点；q指向研究生结点；a指向本科生结点；m指向新建立的结点*/
+   int i=0, j=0, flag=0, flag1=0, flag2=0, len=strlen(str);
+   head = p = q = m = a = NULL;
+   while(i<len)
+   {
+      if(str[i]==')'||str[i]=='('||str[i]=='，'||str[i]==')'||str[i]=='('||str[i]=='，')
+      {
+         i++;
+         continue;
+      }
+      else
+      {
+         if(!(m=(GList * )malloc(sizeof(GList))))
+             exit(1);
+         for(j=0; str[i] != '-';)     /*将字符串中的学生信息转化成学生结点*/
+             m->name[j++]=str[i++];
+         m->name[j]='\0';
+         for(j=0,++i;str[i] != '-';)
+             m->prof[j++]=str[i++];
+         m->prof[j]='\0';
+         m->type=str[++i] - 48;
+         m->ptr.hp=m->ptr.tp=NULL;
+         i++;
+         if(m->type==0)         /*导师结点的处理*/
+         {
+            if(flag)
+            {
+               p->ptr.hp=m;     /*非首结点*/
+               p=m;
+            }
+            else
+            {
+               head=p=m;        /*首结点的处理*/
+               flag=1;
+            }
+            flag1=0;
+            a=q=m;              /*a在此等于m，主要是处理本科生直属于导师的情况*/
+         }
+         else if(m->type==1)    /*研究生结点*/
+         {
+            if(flag1)
+            {
+               q->ptr.hp=m;     /*非首结点的处理*/
+               q=m;
+            }
+            else
+            {
+               q->ptr.tp=m;     /*首结点的处理*/
+               q=m;
+               flag1=1;
+            }
+            flag2=0;
+            a=m;
+         }
+         else                  /*本科生结点*/
+         {
+            if(flag2)
+            {
+               a->ptr.hp=m;    /*非首结点的处理*/
+               a=m;
+ }
+         else                  /*本科生结点*/
+         {
+            if(flag2)
+            {
+               a->ptr.hp=m;    /*非首结点的处理*/
+               a=m;
+            }
+            else
+            {
+               a->ptr.tp=m;    /*首结点的处理*/
+               a=m;
+               flag2=1;
+            }
+         }
+      }
+   }
+   return head;
+}
+void GListPrint(GList * head)   /*输出广义表*/
+{
+     GList *p, * q, *a;         /*与CreatGList函数中的指向一样*/
+     int flag=0,flag1=0,flag2=0;
+     p=head;
+     printf("(");
+     while(TRUE)                /*导师范畴*/
+     {
+        if(p==NULL) break;
+        if(flag)
+           printf(",(%s-%s-%d",p->name,p->prof,p->type);
+        else
+        {
+           printf("(%s-%s-%d",p->name,p->prof,p->type);
+           flag=1;
+        }
+        q=p->ptr.tp;
+        flag2=flag1=0;
+        while(TRUE)            /*研究生或本科生范畴*/
+        {
+           if(q==NULL) break;
+           if(flag1)
+           if(q->type==1)
+                                             printf("，(%s-%s-%d",q->name,q->prof,q->type);
+           else
+              printf("，%s-%s-%d",q->name,q->prof,q->type);
+        else
+        {
+           printf("，(%s-%s-%d",q->name,q->prof,q->type);
+           flag1=1;
+         }
+        a=q->ptr.tp;
+        flag2=0;
+        while(TRUE)           /*本科生范畴*/
+        {
+           if(a==NULL) break;
+           if(flag2)
+              printf("，%s-%s-%d",a->name,a->prof,a->type);
+           else
+           {
+              printf("，(%s-%s-%d",a->name,a->prof,a->type);
+              flag2=1;
+           }
+           a=a->ptr.hp;
+        }
+        if(flag2) printf(")");
+        if(q->type==1||(q->ptr.hp==NULL))
+           printf(")");
+        q=q->ptr.hp;
+       }
+       printf(")");
+       p=p->ptr.hp;
+   }
+    printf(")\n");
+}
+GList * StudentInsert(GList * head)     /*插入学生*/
+{
+    char slen[100],teacher[100],graduate[100];
+    GList * Slen, * p, * q;
+    int i,j;
+    p=head;
+    printf("请输入待插入学生信息，如：李刚-二班-1\n");
+    scanf("%s",slen);
+    if(!(Slen=(GList * )malloc(sizeof(GList))))
+       exit(1);
+                         for(i=0,j=0;slen[i] != '-';)
+        Slen->name[j++]=slen[i++];
+    Slen->name[j]='\0';
+    for(j=0,++i;slen[i] != '-';)
+        Slen->prof[j++]=slen[i++];
+    Slen->prof[j]='\0';
+    Slen->type=slen[++i] - 48;
+    Slen->ptr.hp=Slen->ptr.tp=NULL;
+    if(Slen->type==2)
+    {
+       printf("请输入所属导师:\n");
+       scanf("%s",teacher);
+       while(strcmp(p->name,teacher))
+       {
+           p=p->ptr.hp;
+           if(p==NULL) break;
+       }
+       if(p==NULL)
+          printf("不存在此导师!\n");
+       else
+       {
+          if(p->ptr.tp==NULL||p->ptr.tp->type==2)
+          {
+             Slen->ptr.hp=p->ptr.tp;
+             p->ptr.tp=Slen;
+             printf("插入成功!\n");
+          }
+          else
+          {
+             printf("请输入所属研究生:\n");
+             scanf("%s",graduate);
+             q=p->ptr.tp;
+             while(strcmp(q->name,graduate))
+             {
+                q=q->ptr.hp;
+                if(q==NULL) break;
+             }
+             if(q==NULL)
+                printf("该研究生不存在，不能插入!\n");
+             else
+ {
+                Slen->ptr.hp=q->ptr.tp;
+                q->ptr.tp=Slen;
+                printf("插入成功!\n");
+             }
+
+          }
+       }
+    }
+    else
+    {
+        printf("请输入所属导师:\n");
+        scanf("%s",teacher);
+        while(strcmp(p->name,teacher))
+        {
+           p=p->ptr.hp;
+           if(p==NULL)
+              break;
+        }
+        if(p==NULL)
+              printf("不存在此导师!\n");
+        else
+        {
+            if(p->ptr.tp==NULL||p->ptr.tp->type==1)
+            {
+               Slen->ptr.hp=p->ptr.tp;
+               p->ptr.tp=Slen;
+               printf("插入成功!\n");
+            }
+            else
+            {
+               Slen->ptr.tp=p->ptr.tp;
+               /*printf("该导师只能带本科生，因此不能将研究生插入!\n");*/
+               p->ptr.tp=Slen;
+            }
+        }
+    }
+    printf("\n");
+    return head;
+}
+GList * StudentDelete(GList * head)          /*删除学生*/
+{
+                     char slen[100];
+    GList * Slen, *p, *q, *a, *m;
+    int i,j;
+    int flag=FALSE;            /*标记是否删除成功*/
+    char ch;
+    p=head;
+    printf("请输入待删除学生信息，如：李刚-二班-1\n");
+    scanf("%s",slen);
+    if(!(Slen=(GList *)malloc(sizeof(GList))))
+         exit(1);
+    for(i=0,j=0;slen[i] != '-';)
+         Slen->name[j++]=slen[i++];
+    Slen->name[j]='\0';
+    for(j=0,++i;slen[i] != '-';)
+        Slen->prof[j++]=slen[i++];
+    Slen->prof[j]='\0';
+    Slen->type=slen[++i] - 48;
+    if(Slen->type==2)
+    {
+       while(p != NULL&&flag==FALSE)
+       {
+           q=p->ptr.tp;
+           if(q->type==2)
+           {
+              m=q;
+              while(q!=NULL&&flag==FALSE)
+              {
+                 if(!strcmp(q->name,Slen->name)&&!strcmp(q->prof,Slen->prof))
+                 {
+                     printf("是否要删除这名本科学生:\n");
+                     printf("学生：%6s %6s,导师：%6s %6s\n",Slen->name,Slen->prof,p->name,p->prof);
+                     printf("y删除,n不删除\n");
+                     scanf("%c",&ch);
+                     if(ch=='y'||ch=='y')
+                     {
+                        if(p->ptr.tp==q)
+                           p->ptr.tp=q->ptr.hp;
+                        else
+                                                  m->ptr.hp=q->ptr.hp;
+                        free(q);              /*释放q*/
+                        printf("删除成功!\n");
+                     }
+                     flag=TRUE;
+                 }
+                 else
+                 {
+                    m=q;
+                    q=q->ptr.hp;
+                 }
+              }
+           }
+           else if(q->type==1)
+               while(q !=NULL&&flag==FALSE)
+               {
+                  a=q->ptr.tp;
+                  m=a;
+                  while(a !=NULL&&flag==FALSE)
+                  {
+                     if(!strcmp(a->name,Slen->name)&&!strcmp(a->prof,Slen->prof))
+                     {
+                        printf("是否要删除这名学生：\n");
+                        printf("学生：%6s %6s\n",Slen->name,Slen->prof);
+                        printf("导师：%6s %6s\n",p->name,p->prof);
+                        printf("研究生：%6s %6s\n",q->name,q->prof);
+                        printf("y删除,n不删除");
+                        getchar();
+                        scanf("%c",&ch);
+                        if(ch=='y'||ch=='Y')
+                        {
+                           if(q->ptr.tp==a)
+                              q->ptr.tp==a->ptr.hp;
+                           else
+                              m->ptr.hp=a->ptr.hp;
+                           free(q);         /*释放q*/
+                           printf("删除成功!\n");
+                        }
+                                                     flag=TRUE;
+                     }
+                     else
+                     {
+                        m=a;
+                        a=a->ptr.hp;
+                     }
+                  }
+                  q=q->ptr.hp;
+               }
+           p=p->ptr.hp;
+       }
+    }
+    else
+    {
+       while(p !=NULL&&flag==FALSE)
+       {
+          q=p->ptr.tp;
+          m=q;
+          while(q !=NULL&&flag==FALSE)
+          {
+             if(!strcmp(q->name,Slen->name)&&!strcmp(q->prof,Slen->prof))
+                 if(q->ptr.tp !=NULL)
+                 {
+                    printf("研究生下面有本科生，如果想删除，需先把本科生移到其他研究生组才可以!\n");
+                    flag=1;
+                 }
+                 else
+                 {
+                    printf("是否要删除这名研究生：\n");
+                    printf("研究生：%6s %6s,导师：%6s %6s\n",Slen->name,Slen->prof,p->name,p->prof);
+                    printf("y删除,n不删除");
+                    getchar();
+                    scanf("%c",&ch);
+                    if(ch=='y'||ch=='y')
+                    {
+                       if(p->ptr.tp==q)
+                          p->ptr.tp=q->ptr.hp;
+                       else
+                                          m->ptr.hp=q->ptr.hp;
+                       free(q);            /*释放q*/
+                       printf("删除成功!\n");
+                    }
+                    flag=TRUE;
+                 }
+             else
+             {
+                m=q;
+                q=q->ptr.hp;
+             }
+          }
+          p=p->ptr.hp;
+       }
+    }
+    if(!flag)
+       printf("查无此人!\n");
+    printf("\n");
+    return head;
+}
+void Inquire(GList * head)          /*查询信息*/
+{
+    char slen[100];
+    GList * p, * q, * a, * m;
+    int flag=FALSE;
+    p=head;
+    printf("\n请输入待查人员信息，如李刚\n");
+    scanf("%s",slen);
+    while(p!=NULL)
+    {
+       q=p->ptr.tp;
+       if(!strcmp(p->name,slen))
+       {
+          flag=TRUE;
+          printf("\n本人信息：姓名：%s 职称：%s 类型：导师\n",p->name,p->prof);
+       }
+       if(q->type==2)           /*该导师直接带本科生*/
+       {
+          a=q;
+          while(a!=NULL)
+                            {
+             if(!strcmp(a->name,slen))
+             {
+                printf("\n本人信息：姓名：%s 班级：%s 类型：本科生\n",a->name,a->prof);
+                printf("导师信息：姓名：%s 职称：%s\n",p->name,p->prof);
+                flag=TRUE;
+             }
+             m=a;
+             a=a->ptr.hp;
+          }
+       }
+       else
+       {
+          while(q!=NULL)
+          {
+             m=q;
+             a=q->ptr.tp;
+             if(!strcmp(q->name,slen))
+             {
+                printf("\n本人信息：姓名：%s 班级：%s 类型：研究生\n",q->name,q->prof);
+                printf("导师信息：姓名：%s 职称：%s\n",p->name,p->prof);
+                flag=TRUE;
+              }
+              while(a!=NULL)
+             {
+                if(!strcmp(a->name,slen))
+                {
+                    printf("\n本人信息：姓名：%s 班级：%s 类型：本科生\n",a->name,a->prof);
+                    printf("导师信息：姓名：%s 职称：%s\n",p->name,p->prof);
+                    printf("研究生信息：姓名：%s 班级：%s\n",q->name,q->prof);
+                    flag=1;
+                 }
+                 m=a;
+                 a=a->ptr.hp;
+              }
+             q=q->ptr.hp;
+            }
+       }
+       p=p->ptr.hp;
+    }
+    if(!flag)
+       printf("查无此人\n");
+                      printf("\n");
+}
+void StudentCount(GList * head)          /*统计导师的研究生、本科生人数*/
+{
+    char teacher[100];
+    GList * p, * q, * a;
+    int Gra=0,Ugra=0;
+    p=head;
+    printf("请输入导师姓名:\n");
+    scanf("%s",teacher);
+    while(strcmp(p->name,teacher))
+    {
+       p=p->ptr.hp;
+       if(p==NULL)
+          break;
+    }
+    if(p==NULL)
+       printf("不存在该导师!\n");
+    else
+    {
+       q=p->ptr.tp;
+       while(q !=NULL)
+       {
+          Gra++;
+          a=q->ptr.tp;
+          while(a !=NULL)
+          {
+             Ugra++;
+             a=a->ptr.hp;
+          }
+        q=q->ptr.hp;
+       }
+       if(p->ptr.tp->type==1)
+       {
+          printf("研究生人数：%d\n",Gra);
+          printf("本科生人数：%d\n",Ugra);
+       }
+       else
+          printf("本科生人数：%d\n",Gra);
+                                                }
+    printf("\n");
+}
+void Menu()
+{
+    printf("***************************************************************\n");
+    printf("1.%55s\n","建立广义表");
+    printf("2.%55s\n","插入学生");
+    printf("3.%55s\n","删除学生");
+    printf("4.%55s\n","查询信息");
+    printf("5.%55s\n","统计导师的研究生、本科生人数");
+    printf("6.%55s\n","输出广义表");
+    printf("7.%55s\n","退出");
+    printf("***************************************************************\n");
+}
+int main(int argc,char * argv[])
+{
+    GList * Head;
+    char str[100];
+    int choice;
+    while(TRUE)
+    {
+       Menu();
+       scanf("%d",&choice);
+       switch(choice)
+       {
+           case 1 : printf("请输入您想建立的标准广义表，例如：((高老师-教授-0，(李平-一班-2，杨梅-二班-2))，(李平-博士-0，(李平-三班-1，(李平-四班-2))))\n");
+                    scanf("%s",str);
+                    Head=GListCreate(str);
+                    break;
+           case 2 : Head=StudentInsert(Head);
+                    break;
+           case 3 : Head=StudentDelete(Head);
+                    break;
+           case 4 : Inquire(Head);
+                    break;
+           case 5 : StudentCount(Head);
+                    break;
+           case 6 : GListPrint(Head);
+                    break;
+           case 7 : return 0;
+
+       }
+    }
+    return 0;
+}}
